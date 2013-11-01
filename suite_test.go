@@ -92,7 +92,7 @@ func init() {
 					sleepTime := time.Duration(r.Float64() * 0.01 * float64(time.Second))
 					time.Sleep(sleepTime)
 				})
-				Ω(runtime.Seconds()).Should(BeNumerically("<=", 0.011))
+				Ω(runtime.Seconds()).Should(BeNumerically("<=", 0.111))
 				Ω(runtime.Seconds()).Should(BeNumerically(">=", 0))
 
 				randomValue := r.Float64() * 10.0

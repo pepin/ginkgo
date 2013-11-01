@@ -111,7 +111,25 @@ func (ex *example) runSample(sample int) (exampleState types.ExampleState, examp
 						exampleFailure = afterEachFailure
 					}
 				}
+				if container.AllSubjectsRun() {
+					//LIFO just like defer
+					for i := len(container.afterAllNodes) - 1; i >= 0; i-- {
+						afterAll := container.afterAllNodes[i]
+						outcome, failure := afterAll.run()
+						afterAllState, afterAllFailure := ex.processOutcomeAndFailure(i, types.ExampleComponentTypeAfterAll, afterAll.codeLocation, outcome, failure)
+						if afterAllState != types.ExampleStatePassed && exampleState == types.ExampleStatePassed {
+							exampleState = afterAllState
+							exampleFailure = afterAllFailure
+						}
+					}
+				}
 			}
+		}
+	}()
+
+	defer func() {
+		for _, container := range ex.containers {
+			container.NotifyComplete(ex.subject)
 		}
 	}()
 

@@ -5,6 +5,7 @@ import (
 	. "github.com/onsi/gomega"
 	"math/rand"
 	"sort"
+	"time"
 )
 
 func init() {
@@ -29,18 +30,82 @@ func init() {
 
 		Describe("appending", func() {
 			Describe("it nodes", func() {
-				It("can append container nodes and it nodes", func() {
-					itA := newItNode("itA", func() {}, flagTypeNone, types.GenerateCodeLocation(0), 0)
-					itB := newItNode("itB", func() {}, flagTypeNone, types.GenerateCodeLocation(0), 0)
-					subContainer := newContainerNode("subcontainer", flagTypeNone, types.GenerateCodeLocation(0))
-					container.pushSubjectNode(itA)
-					container.pushContainerNode(subContainer)
-					container.pushSubjectNode(itB)
-					Ω(container.subjectAndContainerNodes).Should(Equal([]node{
-						itA,
-						subContainer,
-						itB,
-					}))
+				Context("appending nodes", func() {
+					var itA, itB *itNode
+					var subContainer *containerNode
+					BeforeEach(func() {
+						itA = newItNode("itA", func() {}, flagTypeNone, types.GenerateCodeLocation(0), 0)
+						itB = newItNode("itB", func() {}, flagTypeNone, types.GenerateCodeLocation(0), 0)
+						subContainer = newContainerNode("subcontainer", flagTypeNone, types.GenerateCodeLocation(0))
+						container.pushSubjectNode(itA)
+						container.pushContainerNode(subContainer)
+						container.pushSubjectNode(itB)
+					})
+					It("can append container nodes and it nodes", func() {
+						Ω(container.subjectAndContainerNodes).Should(Equal([]node{
+							itA,
+							subContainer,
+							itB,
+						}))
+					})
+					It("will append only subject nodes to subjects list", func() {
+						Ω(container.subjects).Should(Equal([]exampleSubject{
+							itA,
+							itB,
+						}))
+					})
+					It("will signal container that subjects have run", func() {
+						bex := newExample(itB)
+						bex.addContainerNode(container)
+						bex.runSample(1)
+						Ω(container.subjects).Should(Equal([]exampleSubject{
+							itA,
+						}))
+					})
+					Context("AfterAll is specified", func() {
+						var afterAllRun = false
+						BeforeEach(func() {
+							afterAllRun = false
+							container.pushAfterAllNode(
+								newRunnableNode(func() {
+									afterAllRun = true
+								},
+									types.GenerateCodeLocation(1),
+									6*time.Second),
+							)
+						})
+						It("afterAll runs if both containers run", func() {
+							bex := newExample(itB)
+							bex.addContainerNode(container)
+							bex.runSample(1)
+							Ω(afterAllRun).Should(BeFalse())
+							aex := newExample(itA)
+							aex.addContainerNode(container)
+							aex.runSample(1)
+							Ω(afterAllRun).Should(BeTrue())
+						})
+						It("afterAll runs if subject panics", func() {
+							panicking := &panickySubject{}
+							container.pushSubjectNode(panicking)
+							bex := newExample(itB)
+							bex.addContainerNode(container)
+							bex.runSample(1)
+							Ω(afterAllRun).Should(BeFalse())
+							aex := newExample(itA)
+							aex.addContainerNode(container)
+							aex.runSample(1)
+							pex := newExample(panicking)
+							pex.addContainerNode(container)
+							defer func() {
+								if r := recover(); r != nil {
+									if !Ω(afterAllRun).Should(BeTrue()) {
+										panic(r)
+									}
+								}
+							}()
+							pex.runSample(1)
+						})
+					})
 				})
 			})
 
@@ -170,4 +235,26 @@ func init() {
 			})
 		})
 	})
+}
+
+type panickySubject struct {
+}
+
+func (node *panickySubject) generateExamples() []*example {
+	return []*example{newExample(node)}
+}
+func (node *panickySubject) nodeType() nodeType {
+	return nodeTypeIt
+}
+func (node *panickySubject) getText() string {
+	return "some text?"
+}
+func (node *panickySubject) getFlag() flagType {
+	return flagTypeNone
+}
+func (node *panickySubject) getCodeLocation() types.CodeLocation {
+	return types.GenerateCodeLocation(1)
+}
+func (node *panickySubject) run() (outcome runOutcome, failure failureData) {
+	panic("i'm panicky.  so I panic!")
 }

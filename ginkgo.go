@@ -158,6 +158,10 @@ func AfterEach(body interface{}, timeout ...float64) bool {
 	globalSuite.pushAfterEachNode(body, types.GenerateCodeLocation(1), parseTimeout(timeout...))
 	return true
 }
+func AfterAll(body interface{}, timeout ...float64) bool {
+	globalSuite.pushAfterAllNode(body, types.GenerateCodeLocation(1), parseTimeout(timeout...))
+	return true
+}
 
 func parseTimeout(timeout ...float64) time.Duration {
 	if len(timeout) == 0 {
