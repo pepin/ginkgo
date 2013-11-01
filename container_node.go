@@ -39,15 +39,7 @@ func (node *containerNode) generateExamples() []*example {
 	examples := make([]*example, 0)
 
 	for _, containerOrSubject := range node.subjectAndContainerNodes {
-		if containerOrSubject.nodeType() == nodeTypeContainer {
-			container := containerOrSubject.(*containerNode)
-			examples = append(examples, container.generateExamples()...)
-		} else {
-			subject, ok := containerOrSubject.(exampleSubject)
-			if ok {
-				examples = append(examples, newExample(subject))
-			}
-		}
+		examples = append(examples, containerOrSubject.generateExamples()...)
 	}
 
 	for _, example := range examples {

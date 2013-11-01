@@ -30,6 +30,10 @@ func (node *measureNode) run() (outcome runOutcome, failure failureData) {
 	return runOutcomeCompleted, failureData{}
 }
 
+func (node *measureNode) generateExamples() []*example {
+	return []*example{newExample(node)}
+}
+
 func (node *measureNode) measurementsReport() map[string]*types.ExampleMeasurement {
 	return node.benchmarker.measurementsReport()
 }

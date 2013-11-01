@@ -99,6 +99,10 @@ func newItNode(text string, body interface{}, flag flagType, codeLocation types.
 	}
 }
 
+func (node *itNode) generateExamples() []*example {
+	return []*example{newExample(node)}
+}
+
 func (node *itNode) nodeType() nodeType {
 	return nodeTypeIt
 }

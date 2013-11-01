@@ -7,6 +7,7 @@ import (
 type node interface {
 	nodeType() nodeType
 	getText() string
+	generateExamples() []*example
 }
 
 type exampleSubject interface {
