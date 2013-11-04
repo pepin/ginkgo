@@ -6,6 +6,7 @@ import (
 	"path"
 	"strings"
 	"text/template"
+	"regexp"
 )
 
 var bootstrapText = `package {{.Package}}_test
@@ -49,6 +50,9 @@ type specData struct {
 
 func generateBootstrap() {
 	packageName := getPackage()
+	r := regexp.MustCompile("([^._-]+)(.git)?$")
+	pn := r.FindStringSubmatch(packageName)
+	packageName = pn[1]
 	data := bootstrapData{
 		Package:          packageName,
 		PackageTitleCase: strings.Title(packageName),
