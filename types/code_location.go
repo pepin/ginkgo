@@ -30,7 +30,7 @@ func PruneStack(fullStackTrace string, skip int) string {
 		stack = stack[2*(skip+1):]
 	}
 	prunedStack := []string{}
-	re := regexp.MustCompile(`\/ginkgo\/|\/pkg\/testing\/|\/pkg\/runtime\/`)
+	re := regexp.MustCompile(`\/ginkgo(.git)?\/|\/pkg\/testing\/|\/pkg\/runtime\/`)
 	for i := 0; i < len(stack)/2; i++ {
 		if !re.Match([]byte(stack[i*2])) {
 			prunedStack = append(prunedStack, stack[i*2])
