@@ -81,4 +81,5 @@ const (
 	ExampleComponentTypeIt
 	ExampleComponentTypeMeasure
 	ExampleComponentTypeAfterAll
+	ExampleComponentTypeBeforeAll
 )

@@ -149,6 +149,11 @@ func BeforeEach(body interface{}, timeout ...float64) bool {
 	return true
 }
 
+func BeforeAll(body interface{}, timeout ...float64) bool {
+	globalSuite.pushBeforeAllNode(body, types.GenerateCodeLocation(1), parseTimeout(timeout...))
+	return true
+}
+
 func JustBeforeEach(body interface{}, timeout ...float64) bool {
 	globalSuite.pushJustBeforeEachNode(body, types.GenerateCodeLocation(1), parseTimeout(timeout...))
 	return true

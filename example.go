@@ -135,6 +135,15 @@ func (ex *example) runSample(sample int) (exampleState types.ExampleState, examp
 
 	for i, container := range ex.containers {
 		innerMostContainerIndexToUnwind = i
+		if container.NoSubjectsRun() {
+			for _, beforeAll := range container.beforeAllNodes {
+				outcome, failure := beforeAll.run()
+				exampleState, exampleFailure = ex.processOutcomeAndFailure(i, types.ExampleComponentTypeBeforeAll, beforeAll.codeLocation, outcome, failure)
+				if exampleState != types.ExampleStatePassed {
+					return
+				}
+			}
+		}
 		for _, beforeEach := range container.beforeEachNodes {
 			outcome, failure := beforeEach.run()
 			exampleState, exampleFailure = ex.processOutcomeAndFailure(i, types.ExampleComponentTypeBeforeEach, beforeEach.codeLocation, outcome, failure)

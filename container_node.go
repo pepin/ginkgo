@@ -10,7 +10,9 @@ type containerNode struct {
 	flag         flagType
 	text         string
 	codeLocation types.CodeLocation
+	subjectRunCount int
 
+	beforeAllNodes           []*runnableNode
 	beforeEachNodes          []*runnableNode
 	justBeforeEachNodes      []*runnableNode
 	afterEachNodes           []*runnableNode
@@ -52,16 +54,18 @@ func (node *containerNode) generateExamples() []*example {
 }
 
 func (node *containerNode) AllSubjectsRun() bool {
-	return len(node.subjects) == 0
+	return len(node.subjects) == node.subjectRunCount
+}
+func (node *containerNode) NoSubjectsRun() bool {
+	return 0 == node.subjectRunCount
 }
 func (node *containerNode) NotifyComplete(subject exampleSubject) {
-	newSubs := make([]exampleSubject, 0)
 	for _, s := range node.subjects {
-		if s != subject {
-			newSubs = append(newSubs, s)
+		if s == subject {
+			node.subjectRunCount += 1
+			return
 		}
 	}
-	node.subjects = newSubs
 }
 
 func (node *containerNode) pushContainerNode(container *containerNode) {
@@ -75,6 +79,10 @@ func (node *containerNode) pushSubjectNode(subject exampleSubject) {
 
 func (node *containerNode) pushAfterAllNode(afterAll *runnableNode) {
 	node.afterAllNodes = append(node.afterAllNodes, afterAll)
+}
+
+func (node *containerNode) pushBeforeAllNode(beforeAll *runnableNode) {
+	node.beforeAllNodes = append(node.beforeAllNodes, beforeAll)
 }
 
 func (node *containerNode) pushBeforeEachNode(beforeEach *runnableNode) {

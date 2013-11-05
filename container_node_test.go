@@ -58,52 +58,75 @@ func init() {
 						bex := newExample(itB)
 						bex.addContainerNode(container)
 						bex.runSample(1)
-						Ω(container.subjects).Should(Equal([]exampleSubject{
-							itA,
-						}))
+						Ω(container.subjectRunCount).Should(BeNumerically("==", 1))
 					})
-					Context("AfterAll is specified", func() {
-						var afterAllRun = false
+					Describe("run once containers", func() {
+						var bex, aex *example
 						BeforeEach(func() {
-							afterAllRun = false
-							container.pushAfterAllNode(
-								newRunnableNode(func() {
-									afterAllRun = true
-								},
+							bex = newExample(itB)
+							bex.addContainerNode(container)
+							aex = newExample(itA)
+							aex.addContainerNode(container)
+						})
+						Context("BeforeAll is specified", func() {
+							var beforeAllRun = false
+							BeforeEach(func() {
+								beforeAllRun = false
+								container.pushBeforeAllNode(
+									newRunnableNode(func() {
+										beforeAllRun = true
+									},
 									types.GenerateCodeLocation(1),
 									6*time.Second),
-							)
+								)
+							})
+							It("beforeAll runs when first contained element is run", func(){
+								bex.runSample(1)
+								Ω(beforeAllRun).Should(BeTrue())
+							})
+							It("beforeAll runs only 1 time even if 2 subjects run", func(){
+								bex.runSample(1)
+								Ω(beforeAllRun).Should(BeTrue())
+								beforeAllRun = false
+								aex.runSample(1)
+								Ω(beforeAllRun).Should(BeFalse())
+							})
 						})
-						It("afterAll runs if both containers run", func() {
-							bex := newExample(itB)
-							bex.addContainerNode(container)
-							bex.runSample(1)
-							Ω(afterAllRun).Should(BeFalse())
-							aex := newExample(itA)
-							aex.addContainerNode(container)
-							aex.runSample(1)
-							Ω(afterAllRun).Should(BeTrue())
-						})
-						It("afterAll runs if subject panics", func() {
-							panicking := &panickySubject{}
-							container.pushSubjectNode(panicking)
-							bex := newExample(itB)
-							bex.addContainerNode(container)
-							bex.runSample(1)
-							Ω(afterAllRun).Should(BeFalse())
-							aex := newExample(itA)
-							aex.addContainerNode(container)
-							aex.runSample(1)
-							pex := newExample(panicking)
-							pex.addContainerNode(container)
-							defer func() {
-								if r := recover(); r != nil {
-									if !Ω(afterAllRun).Should(BeTrue()) {
-										panic(r)
+						Context("AfterAll is specified", func() {
+							var afterAllRun = false
+							BeforeEach(func() {
+								afterAllRun = false
+								container.pushAfterAllNode(
+									newRunnableNode(func() {
+										afterAllRun = true
+									},
+										types.GenerateCodeLocation(1),
+										6*time.Second),
+								)
+							})
+							It("afterAll runs if both containers run", func() {
+								bex.runSample(1)
+								Ω(afterAllRun).Should(BeFalse())
+								aex.runSample(1)
+								Ω(afterAllRun).Should(BeTrue())
+							})
+							It("afterAll runs if subject panics", func() {
+								panicking := &panickySubject{}
+								container.pushSubjectNode(panicking)
+								bex.runSample(1)
+								Ω(afterAllRun).Should(BeFalse())
+								aex.runSample(1)
+								pex := newExample(panicking)
+								pex.addContainerNode(container)
+								defer func() {
+									if r := recover(); r != nil {
+										if !Ω(afterAllRun).Should(BeTrue()) {
+											panic(r)
+										}
 									}
-								}
-							}()
-							pex.runSample(1)
+								}()
+								pex.runSample(1)
+							})
 						})
 					})
 				})

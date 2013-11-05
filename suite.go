@@ -79,6 +79,10 @@ func (suite *suite) pushBeforeEachNode(body interface{}, codeLocation types.Code
 	suite.currentContainer.pushBeforeEachNode(newRunnableNode(body, codeLocation, timeout))
 }
 
+func (suite *suite) pushBeforeAllNode(body interface{}, codeLocation types.CodeLocation, timeout time.Duration) {
+	suite.currentContainer.pushBeforeAllNode(newRunnableNode(body, codeLocation, timeout))
+}
+
 func (suite *suite) pushJustBeforeEachNode(body interface{}, codeLocation types.CodeLocation, timeout time.Duration) {
 	suite.currentContainer.pushJustBeforeEachNode(newRunnableNode(body, codeLocation, timeout))
 }
